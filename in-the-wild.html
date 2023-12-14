@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In-the-wild - DiffusionLight: Light Probes for Free by Painting a Chrome Ball </title>
+    <link rel="icon" href="assets/images/icon_32x32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        /* Center navbar */
+        .navbar-brand {
+            flex: 1;
+        }
+        .level .level-item {
+            min-height: 3.25rem;
+        }
+        .level a.level-item{
+            color: rgba(0,0,0,.7);
+        }
+        /* active menu */
+        .controls .active{
+            background: #485fc7 !important;
+            color: #fff !important;
+          }
+        
+        @media only screen and (min-width: 681px) {
+            .vistec-offset {
+              top: -15px;
+            }
+        }
+        /* hero */
+        .hero .title, #control_tip{
+            text-align: center;
+        }
+        #page-hero {
+            background-image:linear-gradient(141deg,#4a1295 0,#7f2e91 60%,#A0223A 100%)
+        }
+        #dataset-name{
+            text-decoration: underline;
+        }
+        #control_tip{
+            background-color: #ffebf0;
+            color: #f1456b;
+        }
+        .is-horizontal-center {
+            justify-content: center;
+        }
+        .card{
+            margin-bottom: 1rem;
+        }
+        .columns-last-child{
+            margin-bottom: calc(1.5rem - 0.75rem) !important;
+        }
+    </style>
+  </head>
+  <body>
+    <div id="compare-app">
+        <nav class="navbar is-fixed-top is-light" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <p class="navbar-item">
+                    <a href="index.html" style="color:#4a4a4a"><b>DiffusionLight</b></a>
+                </p>
+                <p class="navbar-item">
+                    <a href="index.html" style="color:#4a4a4a">Go Back</a>
+                </p>
+            </div>
+        </nav>
+        <section class="hero is-dark" id="page-hero">
+            <div class="hero-body">
+            <div class="container is-fluid">
+                <h1 class="title">
+                    In-the-Wild Light Estimation
+                </h1>
+                <h3 class="subtitle has-text-centered">
+                    Photos from <a href="https://unsplash.com/" target="_blank">Unsplash.com</a>
+                </h3>
+            </div>
+            </div>
+        </section>      
+        <section class="section">
+            <div class="container">
+                <div style="padding:5em;" v-if="scenes.length == 0">
+                    <progress class="progress is-danger" max="100">30%</progress>
+                </div>
+                <div>
+                    <div class="columns is-multiline">
+                        <div v-for="scene, index in scenes" class="column is-half-desktop is-full-tablet" style="padding: 5px;">
+                            <div class="card" style="margin-bottom: 0;" >
+                                <div class="card-content" style="padding: 12px;">
+                                    <!-- Desktop -->
+                                    <div class="">
+                                        <div class="columns is-mobile has-text-centered is-vcentered ">
+                                          <div class="column is-three-quarters">
+                                            <figure class="image">
+                                                <img :src="'assets/images/in-the-wild/' + scene + '.jpg'">
+                                            </figure>
+                                          </div>
+                                          <div class="column is-one-quarters">
+                                            <div class="columns">
+                                                <div class="column">
+                                                    <div>
+                                                        <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                                                    </div>
+                                                    <div>
+                                                        <figure class="image">
+                                                            <img :src="'assets/images/in-the-wild-ball/ball-normal_' + scene + '.png'">
+                                                        </figure>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="columns">
+                                                <div class="column">
+                                                    <div>
+                                                        <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                                                    </div>
+                                                    <div>
+                                                        <figure class="image">
+                                                            <img :src="'assets/images/in-the-wild-ball/ball-dark_' + scene + '.png'">
+                                                        </figure>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <section class="hero" style="background-color: white; padding-bottom:1em; padding-top:1em; border-top: solid 1px #888;">
+        <div style="margin: 0px; margin-top: 5px;">
+          <div class="container" style="text-align: center; vertica">
+            <a href="https://vistec.ist/vision" target="_blank"><img src="assets/images/logo/vision.png" style="width: 130px; display: inline; margin: 0 100px;"></a>
+            <a href="https://vistec.ac.th/" target="_blank"><img src="assets/images/logo/vistec_color.svg" class="vistec-offset" style="width: 130px; display: inline; margin: 0 100px; position:relative; "></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- JAVASCRIPT -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref } = Vue
+        window.app = createApp({
+            setup() {
+                var scenes = ref([]);
+
+                // fetch scene names
+                fetch('assets/images/in-the-wild/scenes.json')
+                    .then(response => response.json())
+                    .then(scenes_name => {
+                        scenes.value = scenes_name;
+                    });
+                return {
+
+                    scenes
+                }
+            }
+        });
+        window.app.mount('#compare-app')
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9BBTLD1V4J"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9BBTLD1V4J');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DiffusionLight: Light Probes for Free by Painting a Chrome Ball</title>
+  <link rel="icon" href="assets/images/icon_32x32.png" type="image/png" sizes="32x32">
+  <meta property="og:url" content="https://diffusionlight.github.io/" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="DiffusionLight: Light Probes for Free by Painting a Chrome Ball" />
+  <meta property="og:description"
+    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
+  <meta property="og:image" content="https://nex-mpi.github.io/assets/images/in-the-wild/bed_ev-00_seed400.jpg" />
+  <meta name="description"
+    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
+  <meta name="keywords"
+    content="light estimation, diffusion model, relighting, chrome ball, inpainting, stable diffusion">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+  <style>
+    body {
+      background-color: #F5F5F5;
+      margin: 0;
+    }
+
+    .btn-more-result {
+      margin-top: 1em;
+    }
+
+    @media only screen and (min-width: 681px) {
+      .vistec-offset {
+        top: -15px;
+      }
+    }
+
+    /* mobile ui */
+    @media screen and (max-width: 768px) {
+      .media-content {
+        overflow-x: inherit;
+      }
+
+      .column-lab-project {
+        padding: 0.3rem;
+      }
+
+      .no-overflow {
+        overflow: hidden;
+        max-width: 100vw;
+      }
+
+      .aff {
+        margin-top: 0px !important;
+        padding-top: 0px;
+        font-size: inherit !important;
+      }
+
+      .aff .column {
+        flex-basis: 0 !important;
+      }
+      .btn-more-result {
+        margin-top: 4em;
+      }
+
+    }
+
+    /* tablet ui */
+    @media screen and (max-width: 1024px) {
+      #teaser {
+        margin-top: 0px !important;
+      }
+
+      #abstract {
+        margin-top: 0px !important;
+      }
+
+      .columns-lab-project {
+        padding-left: 1em;
+        padding-right: 1em;
+      }
+
+      .columns-compare {
+        padding-left: 1em;
+        padding-right: 1em;
+      }
+
+      html,
+      body {
+        overflow-x: hidden;
+      }
+      .btn-more-result {
+        margin-top: 4em;
+      }
+    }
+
+    .splide__pagination__page.is-active {
+      background: #555555;
+    }
+
+    .splide__pagination {
+      bottom: -2em;
+    }
+
+    @media screen and (max-width:3000px) {
+      .is-hidden-on-3000 {
+        display: none !important
+      }
+    }
+
+    @media screen and (max-width:2000px) {
+      .is-hidden-on-2000 {
+        display: none !important
+      }
+    }
+
+    @media screen and (max-width: 350px) {
+      .column.is-12-ultrasmall {
+        width: 100%;
+      }
+
+      .column.has-left-text-ultrasmall {
+        text-align: left;
+      }
+    }
+
+    #in-the-wild-desktop .column figure {
+      margin-left: 0.2em;
+      margin-right: 0.2em;
+    }
+
+    .card {
+      height: 100%;
+      /* background-color: #f5f5f5 !important; */
+      border-radius: 0.5rem;
+      box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, .06), 0 0 0 1px rgba(10, 10, 10, .02);
+      /* box-shadow: none !important; */
+      color: #4a4a4a;
+      max-width: 100%;
+      position: relative;
+    }
+
+    .aff {
+      font-weight: bold;
+      font-size: 17px;
+      margin-top: 0.5rem;
+    }
+
+    .aff .column {
+      flex-basis: content;
+    }
+
+    .fixwidth {
+      max-width: 1000px !important;
+      margin: auto;
+    }
+
+
+    .author-list-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .author-list {
+      list-style-type: none;
+      padding: 0;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.1em;
+      flex-grow: 0px;
+      flex-shrink: 0px;
+    }
+
+    .author-list li {
+      margin-bottom: 0px;
+      padding: 0px 4px;
+    }
+
+    .linebreak {
+      flex-basis: 100%;
+      height: 0;
+    }
+
+    .author_names .column {
+      padding: 0px;
+    }
+
+    #teaser {
+      margin-top: 1em;
+    }
+
+    #abstract {
+      margin-top: 2em;
+      margin-bottom: 2em;
+    }
+
+    .video-wall video {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    .fader_container img {
+      border: none;
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      -webkit-transition: opacity 2s linear;
+      -moz-transition: opacity 2s linear;
+      -o-transition: opacity 2s linear;
+      transition: opacity 2s linear;
+    }
+
+    .showMe {
+      opacity: 1 !important;
+    }
+    
+    .gapless-video-frame .column{
+      display: flex;
+    }
+    .in-the-wild-result-pc .column figure{
+      margin: 0px;
+    }
+    .box-gray {
+      border: rgba(10,10,10,.1) solid 1px;
+      border-radius: 0px;
+    }
+    .splide__slide columns{
+      margin-left: 2em;
+      margin-right: 2em;
+    }
+    .splide__slide p {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+
+    }
+    
+  </style>
+</head>
+
+<body>
+  <section class="hero is-info is-bold no-overflow"
+    style="background-image:linear-gradient(141deg,#4a1295 0,#7f2e91 60%,#A0223A 100%)">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <h1 class="title"
+          onclick="gtag('event', 'title_name', {'event_category' : 'link_click', 'event_label' : 'title_name'})">
+          DiffusionLight: Light Probes for Free by Painting a Chrome Ball</h1>
+        <!-- <div class="columns is-mobile">
+          <div class="author-list-container">
+            <ul class="author-list">
+              <li>Pakkapon Phongthawee*<sup>1</sup></li>
+              <li>Worameth Chinchuthakun*<sup>1,2</sup></li>
+              <li>Nontaphat Sinsunthithet<sup>1</sup></li>
+              <li class="linebreak"></li>
+              <li>Amit Raj<sup>3</sup></li>
+              <li>Varun Jampani<sup>4</sup></li>
+              <li>Pramook Khungurn<sup>5</sup></li>
+              <li>Supasorn Suwajanakorn<sup>1</sup></li>
+            </ul>
+          </div>
+        </div>
+        <div class="columns is-mobile" style="margin-top: -2rem; margin-bottom: -2rem">
+          <div class="author-list-container" style="max-width: 650px">
+            <ul class="author-list aff">
+              <li><sup>1 </sup>VISTEC</li>
+              <li><sup>2 </sup>Tokyo Tech</li>
+              <li><sup>3 </sup>Google Research</li>
+              <li><sup>4 </sup>Stability.AI</li>
+              <li><sup>5 </sup>Pixiv</li>
+            </ul>
+          </div>
+        </div> -->
+        <div class="columns is-multiline is-mobile"
+          onclick="gtag('event', 'title_box', {'event_category' : 'link_click', 'event_label' : 'title_box'})">
+          <div class="column is-12-tablet is-8-mobile is-12-ultrasmall">
+            <div class="columns is-multiline author_names has-text-left-mobile  has-text-center-tablet "
+              style="max-width: 768px; margin-left:auto; margin-right:auto;">
+              <div class="column is-one-third-tablet has-text-left-tablet">Pakkapon Phongthawee*<sup>1</sup></div>
+              <div class="column is-one-third-tablet">Worameth Chinchuthakun*<sup>1,2</sup></div>
+              <div class="column is-one-third-tablet has-text-right-tablet">Nontaphat Sinsunthithet<sup>1</sup></div>
+              <div class="column is-2-tablet has-text-left-tablet">Amit Raj<sup>3</sup></div>
+              <div class="column is-3-tablet">Varun Jampani<sup>4</sup></div>
+              <div class="column is-3-tablet has-text-right-tablet">Pramook Khungurn<sup>5</sup></div>
+              <div class="column is-4-tablet has-text-right-tablet">Supasorn Suwajanakorn<sup>1</sup></div>
+            </div>
+          </div>
+          <div class="column is-12-tablet is-4-mobile is-12-ultrasmall">
+            <div class="columns is-multiline author_names aff has-text-right-mobile  has-text-center-tablet"
+              style="max-width: 768px; margin-left:auto; margin-right:auto; font-size: 1.1em;">
+              <div class="column has-left-text-ultrasmall"><sup>1 </sup>VISTEC</div>
+              <div class="column has-left-text-ultrasmall"><sup>2 </sup>Tokyo Tech</div>
+              <div class="column has-left-text-ultrasmall"><sup>3 </sup>Google Research</div>
+              <div class="column has-left-text-ultrasmall"><sup>4 </sup>Stability AI</div>
+              <div class="column has-left-text-ultrasmall"><sup>5 </sup>Pixiv</div>
+            </div>
+          </div>
+          <div class="column" style="margin-bottom: -2.5em; margin-top: -0.5em; color: rgba(255, 255, 255, 0.7); font-size: 0.9em;">
+            *Equal contributions
+          </div>
+        </div>
+  </section>
+
+  <section class="no-overflow" id="teaser"
+    onclick="gtag('event', 'teaser', {'event_category' : 'link_click', 'event_label' : 'teaser'})">
+    <!--Desktop show 6 image-->
+    <!--Table show 6 image, 2 row with 3 image each -->
+    <div class="card container" style=" margin-left: auto; margin-right: auto;  ">
+        <img id="preview" style="display: none; position: absolute"></img>
+      <div class="columns is-mobile" style="margin: 0px;">
+
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+              <img class="showMe" src="assets/images/in-the-wild/anime_wall_ev-00_seed800.jpg">
+              <img src="assets/images/in-the-wild/korea_sakura_ev-00_seed600.jpg">
+            </div>
+          </figure>
+        </div>
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+              <img class="showMe" src="assets/images/in-the-wild/snowboarding_ev-00_seed600.jpg">
+              <img src="assets/images/in-the-wild/man_face_ev-00_seed600.jpg">
+            </div>
+
+          </figure>
+        </div>
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+            <img class="showMe" src="assets/images/in-the-wild/bed_ev-00_seed400.jpg">
+            <img src="assets/images/in-the-wild/mickey_ev-00_seed600.jpg">
+            </div>
+          </figure>
+        </div>
+      </div>
+      <div class="columns  is-mobile"
+        style="margin-top: 0px; margin-bottom: 0px; margin-left: auto; margin-right: auto;  ">
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+            <img class="showMe"src="assets/images/in-the-wild/chris-czermak-gZKzBhsO6KY-unsplash_seed0.jpg">
+            <img src="assets/images/in-the-wild/living_room_ev-00_seed400.jpg">
+            </div>
+          </figure>
+        </div>
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+            <img class="showMe" src="assets/images/in-the-wild/buddhist_ev-00_seed600.jpg">
+            <img src="assets/images/in-the-wild/patricia-barbosa-eqSRX9_0Tcs-unsplash_seed140.jpg">
+            </div>
+          </figure>
+        </div>
+        <div class="column" style="padding:0px;">
+          <figure class="image is-4by3">
+            <div class="fader_container">
+            <img class="showMe" src="assets/images/in-the-wild/roman-lopez-92XOQbvqpdU-unsplash_seed200.jpg">
+            <img src="assets/images/in-the-wild/coast_ev-00_seed200.jpg">
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="abstract"
+    onclick="gtag('event', 'abstract', {'event_category' : 'link_click', 'event_label' : 'abstract'})">
+    <div class="container fixwidth">
+      <div class="card">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-content">
+              <p class="title is-3">Abstract</p>
+            </div>
+          </div>
+
+          <div class="content is-size-6-desktop">
+            We present a simple yet effective technique to estimate lighting in a single input image. Current techniques
+            rely heavily on HDR panorama datasets to train neural networks to regress an input with limited
+            field-of-view to a full environment map. However, these approaches often struggle with real-world,
+            uncontrolled settings due to the limited diversity and size of their datasets. To address this problem, we
+            leverage diffusion models trained on billions of standard images to render a chrome ball into the input
+            image. Despite its simplicity, this task remains challenging: the diffusion models often insert incorrect or
+            inconsistent objects and cannot readily generate images in HDR format. Our research uncovers a surprising
+            relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to
+            consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable
+            Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method
+            produces convincing light estimates across diverse settings and demonstrates superior generalization to
+            in-the-wild scenarios.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="no-overflow" style="margin-top:2em; margin-bottom:2em;">
+    <div class="container has-text-centered">
+      <div class="columns is-mobile">
+        <div class="column is-hidden-mobile	"></div>
+        <div class="column">
+          <a href="https://arxiv.org/pdf" target="_blank"
+            onclick="gtag('event', 'download_paper', {'event_category' : 'link_click', 'event_label' : 'arxiv'})">
+            <div>
+              <img src="assets/images/logo/paper.png">
+            </div>
+            Paper
+          </a>
+        </div>
+        <div class="column">
+          <a href="https://github.com/DiffusionLight/DiffusionLight" target="_blank"
+            onclick="gtag('event', 'download_code', {'event_category' : 'link_click', 'event_label' : 'code'})">
+            <div>
+              <img src="assets/images/logo/coding.png">
+            </div>
+            Code
+          </a>
+        </div>
+        <div class="column">
+          <a href="https://vistec-my.sharepoint.com/:f:/g/personal/pakkapon_p_s19_vistec_ac_th/EvBHbnLrVnZArhQTcboh6qkBGcSqUqzdgx13iZ2IsLPzOw?e=D9lSPq"
+            target="_blank"
+            onclick="gtag('event', 'download_score_measuring', {'event_category' : 'link_click', 'event_label' : 'score_measuring'})">
+            <div>
+              <img src="assets/images/logo/score_measuring.png">
+            </div>
+            Score Measurement
+          </a>
+        </div>
+        <div class="column is-hidden-mobile	"></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 2em; margin-bottom:2em;">
+    <div class="container">
+      <div class="card" style="">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-content">
+              <p class="title is-3">Approach</p>
+            </div>
+          </div>
+
+          <div class="content">
+            Given an input image, we seek to estimate the scene's lighting as an HDR environment map. The idea is to inpaint a chrome ball into the image using a diffusion model and unwarp it to an environment map. We tackle two key challenges of (1) how to consistently generate chrome balls and (2) how to use an LDR diffusion model to generate HDR chrome balls.
+            <img src="assets/images/pipeline.jpg" style="width: 100%; height: auto; margin: 2em 0;">
+            (a) We use Stable Diffusion XL with depth-conditioned ControlNet to inpaint a chrome ball. The input image, its depthmap with a white circle, and the mask are fed to the diffusion model with the prompt "a perfect mirrored reflective chrome ball sphere". (b) Our iterative inpainting algorithm helps improve generation quality and consistency by constraining the initial noise through sample averaging. (c) We train LoRA for exposure bracketing, which produces multiple LDR chrome balls with varying exposures for HDR merging. 
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 2em; margin-bottom:2em;">
+    <div class="container">
+      <div class="card" style="">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-content">
+              <p class="title is-3">In-the-Wild Results</p>
+            </div>
+          </div>
+
+          <div class="content">
+            <p style="margin-bottom: 2em;">
+              Our technique can estimate lighting for a variety of input images, such as indoor and outdoor scenes,
+              close-up shots, paintings, and photos of human faces. Here, we show our predicted chrome balls in a normally exposed version (EV0) and an underexpoed version (EV-5). These input images are from <a
+                href="https://unsplash.com/" target="_blank">Unsplash.com.</a>
+            </p>
+            <!-- Desktop: display all image: 3x3-->
+            <!--
+            <div class="is-hidden-touch" id="in-the-wild-desktop">
+              <div class="columns is-gapless is-multiline is-mobile">
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/desert_ev-00_seed600.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/3_ev-00_seed140.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/anpanman_ev-00_seed400.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/korea_sakura_ev-00_seed600.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/chiyoda_ev-00_seed400.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/bw1_ev-00_seed400.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/living_room_ev-00_seed400.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/club_ev-00_seed400.jpg">
+                  </figure>
+                </div>
+                <div class="column is-one-third">
+                  <figure class="image ">
+                    <img src="assets/images/in-the-wild/vermeer_earring_ev-00_seed140.jpg">
+                  </figure>
+                </div>
+              </div>
+            </div>
+            -->
+            <div class="columns is-mobile in-the-wild-result-pc is-multiline is-hidden-touch">
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/demba-joob-rJ7NCZidQgE-unsplash_seed600.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_demba-joob-rJ7NCZidQgE-unsplash_seed600.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_demba-joob-rJ7NCZidQgE-unsplash_seed600.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/anpanman_ev-00_seed400.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_anpanman_ev-00_seed400.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_anpanman_ev-00_seed400.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/roman-lopez-92XOQbvqpdU-unsplash_seed200.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_roman-lopez-92XOQbvqpdU-unsplash_seed200.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_roman-lopez-92XOQbvqpdU-unsplash_seed200.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/bw1_ev-00_seed400.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_bw1_ev-00_seed400.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_bw1_ev-00_seed400.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="column is-6">
+                <div class="columns is-mobile has-text-centered is-vcentered box-gray">
+                  <div class="column is-three-quarters">
+                    <figure class="image">
+                        <img src="assets/images/in-the-wild/vermeer_earring_ev-00_seed140.jpg">
+                    </figure>
+                  </div>
+                  <div class="column is-one-quarters">
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-normal_vermeer_earring_ev-00_seed140.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div>
+                                <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                            </div>
+                            <div>
+                                <figure class="image">
+                                    <img src="assets/images/in-the-wild-ball/ball-dark_vermeer_earring_ev-00_seed140.png">
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Mobile: use slide-->
+            <div class="splide is-hidden-desktop">
+              <div class="splide__track">
+                <ul class="splide__list">
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/demba-joob-rJ7NCZidQgE-unsplash_seed600.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_demba-joob-rJ7NCZidQgE-unsplash_seed600.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_demba-joob-rJ7NCZidQgE-unsplash_seed600.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/anpanman_ev-00_seed400.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_anpanman_ev-00_seed400.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_anpanman_ev-00_seed400.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/roman-lopez-92XOQbvqpdU-unsplash_seed200.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_roman-lopez-92XOQbvqpdU-unsplash_seed200.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_roman-lopez-92XOQbvqpdU-unsplash_seed200.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/bw1_ev-00_seed400.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_bw1_ev-00_seed400.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_bw1_ev-00_seed400.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_nao-takabayashi-Lrhqu5l96hY-unsplash_seed800.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="splide__slide">
+                    <div>
+                      <figure class="image">
+                        <img src="assets/images/in-the-wild/vermeer_earring_ev-00_seed140.jpg">
+                      </figure>
+                    </div>
+                    <div class="columns is-mobile has-text-centered">
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Normally exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-normal_vermeer_earring_ev-00_seed140.png">
+                              </figure>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <div>
+                              <p class="is-5 has-text-weight-bold">Under&#8203;exposed</p>
+                          </div>
+                          <div>
+                              <figure class="image">
+                                  <img src="assets/images/in-the-wild-ball/ball-dark_vermeer_earring_ev-00_seed140.png">
+                              </figure>
+                          </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="has-text-centered btn-more-result">
+              <a class="button is-medium is-link is-light " href="in-the-wild.html"
+                onclick="gtag('event', 'more_result', {'event_category' : 'link_click', 'event_label' : 'more_result'})" style="font-weight: bold; font-size: 1.4em;">More results</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 2em; margin-bottom:2em;">
+    <div class="container">
+      <div class="card" style="">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-content">
+              <p class="title is-3">Predicting Multiple Chrome Balls</p>
+            </div>
+          </div>
+
+          <div class="content">
+            <p style="margin-bottom: 2em;">
+            Our method can generate multiple plausible chrome balls by varying the initial noise map of diffusion sampling. Note that the average of these variations captures the overall lighting reasonably well. This average is utilized by our "iterative inpainting" algorithm to enhance the quality and consistency of light estimation. Hover over these videos to pause.
+            </p>
+          </div>
+          <div class="columns is-mobile has-text-centered is-vcentered" style="margin-bottom: -5px">
+            <div class="column">
+              <p class="has-text-weight-bold">Variations</p>
+            </div>
+            <div class="column">
+              <p class="has-text-weight-bold">Mean of the variations</p>
+            </div>
+            <div class="column">
+              <p class="has-text-weight-bold">Variations</p>
+            </div>
+            <div class="column">
+              <p class="has-text-weight-bold">Mean of the variations</p>
+            </div>
+          </div>
+          <div class="columns is-gapless is-multiline is-mobile gapless-video-frame average_videos">
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_castle2'})">
+                <source src="assets/video/ball_average/castle2.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_man_facet'})">
+                <source src="assets/video/ball_average/man_face.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_desert'})">
+                <source src="assets/video/ball_average/desert.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_bed'})">
+                <source src="assets/video/ball_average/bed.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_desk'})">
+                <source src="assets/video/ball_average/desk.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="column is-6 ">
+              <video class="pause-on-hover" poster=""  playsinline autoplay muted loop preload="auto"
+                onclick="gtag('event', 'ball_average_video', {'event_category' : 'video_click', 'event_label' : 'video_snowboard'})">
+                <source src="assets/video/ball_average/snowboarding.mp4" type="video/mp4">
+              </video>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="card">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-content">
+              <p class="title is-3">Application: Virtual Object Insertion</p>
+            </div>
+          </div>
+
+          <div class="content">
+            <div style="margin-bottom: 2em;">
+              Using our environmental light estimates, we can seamlessly insert 3D objects into an existing photograph. Hover over the video to stop time!
+            </div>
+            <div class="columns is-mobile has-text-centered is-vcentered" style="margin-bottom: -5px">
+              <div class="column">
+                <p class="has-text-weight-bold">
+                  Input image
+                </p>
+              </div>
+              <div class="column">
+                <p class="has-text-weight-bold">
+                  Without relighting
+                </p>
+              </div>
+              <div class="column">
+                <p class="has-text-weight-bold">
+                  Relighting with DiffusionLight
+                </p>
+              </div>
+            </div>
+            <video class="video_app" poster="" playsinline autoplay muted loop preload="auto"
+              onclick="gtag('event', 'object_insertion_video', {'event_category' : 'video_click', 'event_label' : 'video_1'})">
+              <source src="assets/video/compare_indoor_blackclock.mp4" type="video/mp4">
+            </video>
+            <!--
+            <video poster="" controls playsinline autoplay muted loop preload="auto">
+              <source src="assets/video/compare_beach5.mp4" type="video/mp4">
+            </video>
+            <video poster="" controls playsinline autoplay muted loop preload="auto">
+              <source src="assets/video/compare_outdoor.mp4" type="video/mp4">
+            </video>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="container" style="margin-top:2em; margin-bottom:2em;">
+    <div style="border-bottom:1px solid lightgrey; padding-bottom:1em; margin-bottom:1em">
+      <p class="title is-3" style="padding-left:0.5em">Comparison with Prior Work</p>
+    </div>
+    <div class="columns is-desktop columns-compare">
+      <div class="column">
+        <a href="compare.html?dataset=polyhaven"
+          onclick="gtag('event', 'supp_polyhaven', {'event_category' : 'link_click', 'event_label' : 'supp_polyhaven'})">
+          <div class="card">
+            <div class="card-image">
+              <figure class="image is-4by3">
+                <img src="assets/images/front-page/polyhaven_preview.jpg" alt="Poly Haven">
+              </figure>
+            </div>
+            <div class="card-content" style="padding: 24px 6px">
+              <div class="media">
+                <div class="media-left">
+                </div>
+                <div class="media-content">
+                  <p class="title dtitle"> Poly Haven</p>
+                  <p class="subtitle is-6">Rendering of 3 spheres in indoor & outdoor scenes</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="column">
+        <a href="compare.html?dataset=indoor"
+          onclick="gtag('event', 'supp_indoor', {'event_category' : 'link_click', 'event_label' : 'supp_indoor'})">
+          <div class="card">
+            <div class="card-image">
+              <figure class="image is-4by3">
+                <img src="assets/images/front-page/indoor_preview.jpg" alt="Laval Indoor">
+              </figure>
+            </div>
+            <div class="card-content" style="padding: 24px 6px">
+              <div class="media">
+                <div class="media-left">
+                </div>
+                <div class="media-content">
+                  <p class="title dtitle"> Laval Indoor</p>
+                  <p class="subtitle is-6">Rendering of 3 spheres in indoor scenes</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="column">
+        <a href="compare.html?dataset=array_of_spheres"
+          onclick="gtag('event', 'supp_arrayofsphere', {'event_category' : 'link_click', 'event_label' : 'supp_arrayofsphere'})">
+          <div class="card">
+            <div class="card-image">
+              <figure class="image is-4by3">
+                <img src="assets/images/front-page/everlight_preview.jpg" alt="Array of Sphere">
+              </figure>
+            </div>
+            <div class="card-content" style="padding: 24px 6px">
+              <div class="media">
+                <div class="media-left">
+                </div>
+                <div class="media-content">
+                  <p class="title dtitle"> Array of Spheres</p>
+                  <p class="subtitle is-6">Rendering of spheres on a plane in indoor scenes</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero" style="padding-top:0px;">
+    <div class="container" style="width: 100%;">
+      <div class="card">
+        <header class="card-header">
+          <p class="card-header-title">
+            BibTex
+          </p>
+          <a class="card-header-icon button-clipboard" style="border:0px; background: inherit;"
+            data-clipboard-target="#bibtex-info"
+            onclick="gtag('event', 'bibtex', {'event_category' : 'link_click', 'event_label' : 'copy_btn'})">
+            <div class="button-clipboard-tooltip" style="display: none;">Copied!</div>
+            <span class="icon">
+              <img src="assets/images/logo/copy.svg" style="height: 20px;" />
+            </span>
+          </a>
+        </header>
+        <div class="card-content" style="max-width: calc(100vw - 3rem);">
+          <pre onclick="gtag('event', 'bibtex', {'event_category' : 'link_click', 'event_label' : 'main_body'})"
+            style="background-color:inherit;padding: 0px;" id="bibtex-info">@inproceedings{Phongthawee2023DiffusionLight,
+  author = {Phongthawee, Pakkapon and Chinchuthakun, Worameth and Sinsunthithet, Nontaphat and Raj, Amit and
+  Jampani, Varun and Khungurn, Pramook and Suwajanakorn, Supasorn},
+  title = {DiffusionLight: Light Probes for Free by Painting a Chrome Ball},
+  booktitle = {ArXiv},
+  year = {2023},
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background-color: #555555; padding-bottom:1.5em;">
+    <div class="container" style="margin-top:2em; padding-top:1em;">
+      <div style="border-bottom:1px solid lightgrey; padding-bottom:1em; margin-bottom:1em;">
+        <p class="title is-3" style="color:white; padding-left:0.5em">From our lab</p>
+      </div>
+      <div class="container">
+        <div class="columns is-desktop columns-lab-project">
+          <div class="column column-lab-project">
+            <a href="https://diffusion-face-relighting.github.io/" target="_blank"
+              onclick="gtag('event', 'difareli', {'event_category' : 'link_click', 'event_label' : 'difareli'})">
+              <div class="card card-lab-project">
+                <header class="card-header">
+                  <p class="card-header-title">
+                    DiFaReli: Diffusion Face Relighting
+                  </p>
+                  <p class="card-header-icon" style="min-width: 150px;">
+                    ICCV 2023
+                  </p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <img src="assets/images/front-page/face-relight.jpg">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="column column-lab-project">
+            <a href="https://zero-guide-seg.github.io/" target="_blank"
+              onclick="gtag('event', 'zero_guidance', {'event_category' : 'link_click', 'event_label' : 'zero_guidance'})">
+              <div class="card card-lab-project">
+                <header class="card-header">
+                  <p class="card-header-title">
+                    Zero-guidance Segmentation Using Zero Segment Labels
+                  </p>
+                  <p class="card-header-icon" style="min-width: 150px;">
+                    ICCV 2023
+                  </p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <img src="assets/images/front-page/zero-guide-seg.jpg">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="columns is-desktop columns-lab-project">
+          <div class="column column-lab-project">
+            <a href="https://geoaware2drepusingcad.github.io/" target="_blank"
+              onclick="gtag('event', 'geoaware2d', {'event_category' : 'link_click', 'event_label' : 'geoaware2d'})">
+              <div class="card card-lab-project">
+                <header class="card-header">
+                  <p class="card-header-title">
+                    Learning Geometric-aware Properties in 2D Representation Using Lightweight CAD Models, or Zero Real
+                    3D Pairs
+                  </p>
+                  <p class="card-header-icon" style="min-width: 150px;">
+                    CVPR 2023
+                  </p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <img src="assets/images/front-page/geo-aware.jpg">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="column column-lab-project">
+            <a href="https://stylegan-salon.github.io/" target="_blank"
+              onclick="gtag('event', 'stylegan_salon', {'event_category' : 'link_click', 'event_label' : 'stylegan_salon'})">
+              <div class="card card-lab-project">
+                <header class="card-header">
+                  <p class="card-header-title">
+                    StyleGAN Salon: Multi-View Latent Optimization for Pose-Invariant Hairstyle Transfer
+                  </p>
+                  <p class="card-header-icon" style="min-width: 150px;">
+                    CVPR 2023
+                  </p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    <img src="assets/images/front-page/stylegansalon.jpg">
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero" style="background-color: white; padding-bottom:1em; padding-top:1em">
+    <div style="margin: 0px; margin-top: 5px;">
+      <div class="container" style="text-align: center; vertica">
+        <a href="https://vistec.ist/vision" target="_blank"><img src="assets/images/logo/vision.png"
+            style="width: 130px; display: inline; margin: 0 100px;"
+            onclick="gtag('event', 'vll_logo', {'event_category' : 'link_click', 'event_label' : 'vll_logo'})"></a>
+        <a href="https://vistec.ac.th/" target="_blank"><img src="assets/images/logo/vistec_color.svg"
+            class="vistec-offset" style="width: 130px; display: inline; margin: 0 100px; position:relative; "
+            onclick="gtag('event', 'vistec_logo', {'event_category' : 'link_click', 'event_label' : 'vistec_logo'})"></a>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+  <script>
+    var splide = new Splide('.splide', {
+      type: 'loop',
+      perPage: 3,
+      autoplay: true,
+      breakpoints: {
+        1024: {
+          perPage: 2,
+        },
+        640: {
+          perPage: 1,
+        },
+      }
+    });
+
+    splide.mount();
+  </script>
+  <!-- Copy Bibtex -->
+  <script src="assets/scripts/clipboard.min.js"></script>
+  <script>
+    var clipboard = new ClipboardJS('.button-clipboard');
+    function setTooltip() {
+      var tooltip = document.querySelector('.button-clipboard-tooltip');
+      tooltip.style.display = 'block';
+    }
+    function hideTooltip() {
+      var tooltip = document.querySelector('.button-clipboard-tooltip');
+      tooltip.style.display = 'none';
+    }
+    clipboard.on('success', function (e) {
+      setTooltip(e.trigger, 'Copied!');
+      setTimeout(function () {
+        hideTooltip(e.trigger);
+      }, 2000);
+
+    });
+  </script>
+  <!-- Random fade teaser -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      let numImages = $(".fader_container").length;
+      setTimeout(nextImage, 7000, 0);
+
+      function nextImage(fid) {
+        var fader = $(".fader_container").eq(fid);
+        var active = fader.children("img.showMe");
+        var next = active.next().length ? active.next() : fader.children("img").first();
+        active.removeClass("showMe");
+        next.addClass("showMe");
+        if (fid == numImages - 1) {
+          setTimeout(nextImage, 7000, 0);
+        } else {
+          setTimeout(nextImage, 3000, (fid + 1) % numImages);
+        }
+      }
+
+      $(".average_videos video, .video_app").mouseover(function (event) {
+        $(this).get(0).pause();
+      });
+      $(".average_videos video, .video_app").mouseout(function (event) {
+        $(this).get(0).play();
+      });
+
+      /*
+      $(".fader_container").mouseover(function (event) {
+        var src = $(this).children(".showMe").attr("src");
+        var newsrc = src;
+        $("#preview").attr("src", newsrc);
+        $("#preview").show();
+        // move preview to the same location as this
+        $("#preview").offset({
+          top: $(this).offset().top,
+          left: $(this).offset().left
+        });
+        // move preview to front most
+        $("#preview").css("z-index", 1000);
+      });
+      $(".fader_container").mouseout(function (event) {
+        $("#preview").hide();
+      });
+      */
+
+    });
+
+  </script>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9BBTLD1V4J"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9BBTLD1V4J');
+  </script>
+
+</body>
+
+</html>
