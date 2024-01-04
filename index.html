@@ -10,10 +10,10 @@
   <meta property="og:type" content="article" />
   <meta property="og:title" content="DiffusionLight: Light Probes for Free by Painting a Chrome Ball" />
   <meta property="og:description"
-    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
+    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR diffusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
   <meta property="og:image" content="https://diffusionlight.github.io/assets/images/in-the-wild/bed_ev-00_seed400.jpg" />
   <meta name="description"
-    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
+    content="We present a simple yet effective technique to estimate lighting in a single input image. Our research uncovers a surprising relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to consistently generate high-quality chrome balls. We further fine-tune an LDR diffusion model (Stable Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method produces convincing light estimates across diverse settings and demonstrates superior generalization to in-the-wild scenarios." />
   <meta name="keywords"
     content="light estimation, diffusion model, relighting, chrome ball, inpainting, stable diffusion">
   <meta name="google-site-verification" content="vKQD2CjY58aKxMAkgWU1kc7DUQqt2_GChgsbpaQXFJY" />
@@ -390,7 +390,7 @@
             image. Despite its simplicity, this task remains challenging: the diffusion models often insert incorrect or
             inconsistent objects and cannot readily generate images in HDR format. Our research uncovers a surprising
             relationship between the appearance of chrome balls and the initial diffusion noise map, which we utilize to
-            consistently generate high-quality chrome balls. We further fine-tune an LDR difusion model (Stable
+            consistently generate high-quality chrome balls. We further fine-tune an LDR diffusion model (Stable
             Diffusion XL) with LoRA, enabling it to perform exposure bracketing for HDR light estimation. Our method
             produces convincing light estimates across diverse settings and demonstrates superior generalization to
             in-the-wild scenarios.
@@ -402,9 +402,9 @@
 
   <section class="no-overflow" style="margin-top:2em; margin-bottom:2em;">
     <div class="container has-text-centered">
-      <div class="columns is-mobile">
-        <div class="column is-hidden-mobile	"></div>
-        <div class="column">
+      <div class="columns is-mobile is-multiline">
+        <div class="column is-hidden-mobile	is-hidden-tablet-only is-hidden-desktop-only"></div>
+        <div class="column is-6-mobile">
           <a href="https://arxiv.org/abs/2312.09168" target="_blank"
             onclick="gtag('event', 'download_paper', {'event_category' : 'link_click', 'event_label' : 'arxiv'})">
             <div>
@@ -413,7 +413,7 @@
             Paper
           </a>
         </div>
-        <div class="column">
+        <div class="column is-6-mobile">
           <a href="https://github.com/DiffusionLight/DiffusionLight" target="_blank"
             onclick="gtag('event', 'download_code', {'event_category' : 'link_click', 'event_label' : 'code'})">
             <div>
@@ -422,7 +422,7 @@
             Code
           </a>
         </div>
-        <div class="column">
+        <div class="column is-6-mobile">
           <a href="https://colab.research.google.com/drive/15pC4qb9mEtRYsW3utXkk-jnaeVxUy-0S?usp=sharing&sandboxMode=true" target="_blank"
             onclick="gtag('event', 'colab', {'event_category' : 'link_click', 'event_label' : 'colab'})">
             <div>
@@ -431,17 +431,26 @@
             Colab notebook
           </a>
         </div>
-        <div class="column">
+        <div class="column is-6-mobile">
+          <a href="https://huggingface.co/DiffusionLight/DiffusionLight" target="_blank"
+            onclick="gtag('event', 'colab', {'event_category' : 'link_click', 'event_label' : 'huggingface'})">
+            <div>
+              <img src="assets/images/logo/hf.png">
+            </div>
+            HuggingFace <br> model card
+          </a>
+        </div>
+        <div class="column is-12-mobile">
           <a href="https://vistec-my.sharepoint.com/:f:/g/personal/pakkapon_p_s19_vistec_ac_th/EvBHbnLrVnZArhQTcboh6qkBGcSqUqzdgx13iZ2IsLPzOw?e=D9lSPq"
             target="_blank"
             onclick="gtag('event', 'download_score_measuring', {'event_category' : 'link_click', 'event_label' : 'score_measuring'})">
             <div>
               <img src="assets/images/logo/score_measuring.png">
             </div>
-            Score Measurement
+            Score measurement
           </a>
         </div>
-        <div class="column is-hidden-mobile	"></div>
+        <div class="column is-hidden-mobile	is-hidden-tablet-only is-hidden-desktop-only"></div>
       </div>
     </div>
   </section>
